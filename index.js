@@ -15,7 +15,12 @@ app.use(
 // User List
 const userlist = [
   { id: 1, name: "Jay", email: "jay@gmail.com", IDofcategoryList: 4 },
-  { id: 2, name: "Ramesh", email: "ramesh@gmail.com", IDofcategoryList: 1 },
+  {
+    id: 2,
+    name: "Tirth",
+    email: "chhabhaiyatirth17@gmail.com",
+    IDofcategoryList: 1,
+  },
   { id: 3, name: "Priya", email: "priya@yahoo.com", IDofcategoryList: 2 },
   { id: 4, name: "Amit", email: "amit@hotmail.com", IDofcategoryList: 3 },
   { id: 5, name: "Sneha", email: "sneha@gmail.com", IDofcategoryList: 4 },
@@ -51,8 +56,9 @@ const categorylist = [
 //   {
 //     scheduleMailID: 1,
 //     template: "Salary Increment Letter",
-//     schedule: "2025-02-02T01:31",
-//     recipient: ["krishna@gmail.com", "ram@gmail.com"],
+//     schedule: "2025-02-02T04:14",
+//     recipient: ["thchhabhaiya@gmail.com"],
+//     status: "Pending",
 //   },
 // ];
 let scheduleMail = [];
@@ -66,9 +72,55 @@ const template_List = [
   { template_id: 5, template_name: "Termination Letter" },
 ];
 
-function sendEmail(recipient, scheduleDate) {
+function sendEmail(recipient, scheduleDate, template) {
   return new Promise(async (resolve, reject) => {
     try {
+      let htmlContent = "";
+      const username = categorylist.find(
+        (user) => user.email === recipient
+      )?.name;
+
+      switch (template) {
+        case "New Offer Letter":
+          htmlContent = `<b>Congratulations, Patron!</b><br>
+We are pleased to offer you a position at our company. Your new role starts soon. <br>
+Welcome aboard!
+<br><br>
+This email was sent on ${scheduleDate}.
+`;
+          break;
+        case "Company Event Invitation":
+          htmlContent = `<b>Dear Patron,</b><br>
+You're invited to our upcoming company event! <br>
+We look forward to seeing you there. Don't miss out!
+<br><br>
+This email was sent on ${scheduleDate}.
+`;
+          break;
+        case "Salary Increment Letter":
+          htmlContent = `<b>Dear Patron,</b><br>
+We are pleased to inform you that your salary has been incremented. Congratulations on your continued contributions to the company!
+<br><br>
+This email was sent on ${scheduleDate}.
+`;
+          break;
+        case "Termination Letter":
+          htmlContent = `<b>Dear Patron,</b><br>
+We regret to inform you that your employment with the company has been terminated, effective immediately. We wish you the best in your future endeavors.
+<br><br>
+This email was sent on ${scheduleDate}.
+`;
+          break;
+        case "Employee Promotion Notice":
+          htmlContent = `<b>Dear Patron,</b><br>
+Congratulations! We are pleased to inform you that you have been promoted to [new position]. Your hard work and dedication have been truly appreciated.
+<br><br>
+This email was sent on ${scheduleDate}.
+`;
+          break;
+        default:
+          htmlContent = "<b>Dear user, your letter is being processed.</b>";
+      }
       const transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
@@ -82,9 +134,9 @@ function sendEmail(recipient, scheduleDate) {
       const info = await transporter.sendMail({
         from: "regionalnewsapp2025@gmail.com",
         to: recipient,
-        subject: `Termination Letter Hello THPA✔ by ${scheduleDate}`,
+        subject: `${template} from Virat Infra Pvt. Ltd.`,
         text: "Hello world?",
-        html: "<b>Hello world?</b>",
+        html: htmlContent,
       });
 
       console.log("Message sent: %s", info.messageId);
@@ -96,6 +148,34 @@ function sendEmail(recipient, scheduleDate) {
   });
 }
 
+// Run Task Every Minute** to Check and Send Scheduled Emails
+cron.schedule("* * * * *", async () => {
+  console.log("⏳ Checking for scheduled emails...");
+
+  const now = new Date();
+
+  for (let i = 0; i < scheduleMail.length; i++) {
+    const { schedule, recipient, template, scheduleMailID, status } =
+      scheduleMail[i];
+    const scheduleDate = new Date(schedule);
+
+    console.log(
+      ` scheduleMail : ${scheduleMail.length} AND scheduleDate :  ${scheduleDate}`
+    );
+
+    if (status === "Pending" && scheduleDate <= new Date()) {
+      console.log(` Sending scheduled email: ${template} at ${schedule}`);
+
+      for (let email of recipient) {
+        const sent = await sendEmail(email, schedule, template);
+        if (sent) {
+          scheduleMail[i].status = "Sent";
+        }
+      }
+    }
+  }
+});
+
 //  Route 1: Get all data (Users, Categories, Scheduled Mails)
 app.get("/api/data", (req, res) => {
   res.json({ userlist, categorylist, scheduleMail });
@@ -106,12 +186,12 @@ app.get("/api/templates", (req, res) => {
   res.json(template_List);
 });
 
-//  Route 4: Get ScheduleMail List
+//  Route 3: Get ScheduleMail List
 app.get("/api/scheduleMail", (req, res) => {
   res.json(scheduleMail); // Send the scheduleMail list in the response
 });
 
-// Route 5: Get Categorylist List
+// Route 4: Get Categorylist List
 app.get("/api/categorylist", (req, res) => {
   res.json(categorylist);
 });
@@ -127,42 +207,28 @@ app.get("/api/userlist", (req, res) => {
 //     .catch((error) => res.status(500).send(error.message));
 // });
 
-//  Route 3: Add New Scheduled Mail
+//  Route 6: Add New Scheduled Mail
 app.post("/api/scheduleMail", (req, res) => {
   const { template, schedule, recipient } = req.body;
   if (!template || !schedule || !recipient) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  try {
-    const scheduleDate = new Date(schedule);
-    const cronTime = `${scheduleDate.getMinutes()} ${scheduleDate.getHours()} ${scheduleDate.getDate()} ${
-      scheduleDate.getMonth() + 1
-    } *`;
+  const newSchedule = {
+    scheduleMailID: Date.now(),
+    template,
+    schedule,
+    recipient,
+    status: "Pending",
+  };
 
-    console.log(`Scheduling email at: ${cronTime}`);
-    // Schedule the email using node-cron
-    cron.schedule(cronTime, async () => {
-      console.log(`Sending scheduled email for: ${template}`);
-      await sendEmail(recipient, scheduleDate);
-    });
-
-    const newSchedule = {
-      scheduleMailID: Date.now(),
-      template,
-      schedule,
-      recipient,
-    };
-
-    scheduleMail.push(newSchedule);
-    res
-      .status(201)
-      .json({ message: "Email sent and scheduled successfully", newSchedule });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to send email" });
-  }
+  scheduleMail.push(newSchedule);
+  res
+    .status(201)
+    .json({ message: "Email sent and scheduled successfully", newSchedule });
 });
 
+//  Route 7: Delete Scheduled Mail
 app.post("/delete/scheduleMail", (req, res) => {
   const { scheduleMailID } = req.body;
   const index = scheduleMail.findIndex(
@@ -170,7 +236,6 @@ app.post("/delete/scheduleMail", (req, res) => {
   );
 
   if (index !== -1) {
-    // Remove the item if found
     scheduleMail.splice(index, 1);
     res.status(200).json({ message: "Scheduled mail deleted successfully." });
   } else {
