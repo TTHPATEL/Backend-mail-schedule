@@ -157,7 +157,7 @@ cron.schedule("* * * * *", async () => {
   console.log("⏳ Checking for scheduled emails...");
 
   const now = moment().utc(); // Current time in UTC
-  console.log("Server Time (UTC):", now.format());
+  console.log(" 🖥️ Server Time (UTC):", now.format());
 
   for (let i = 0; i < scheduleMail.length; i++) {
     let { schedule, recipient, template, scheduleMailID, status } =
@@ -167,14 +167,14 @@ cron.schedule("* * * * *", async () => {
     let scheduleDate = moment(schedule).utc();
 
     console.log(
-      ` ScheduleMail count : ${
+      `⏰ ScheduleMail count : ${
         scheduleMail.length
       } AND Schedule Time (UTC):  ${scheduleDate.format()}`
     );
 
     if (status === "Pending" && scheduleDate.isSameOrBefore(now)) {
       console.log(
-        ` Sending scheduled email: ${template} at ${scheduleDate.format()}`
+        `🚀 Sending scheduled email: ${template} at ${scheduleDate.format()}`
       );
 
       for (let email of recipient) {
@@ -182,7 +182,7 @@ cron.schedule("* * * * *", async () => {
           await sendEmail(email, scheduleDate.format(), template);
           scheduleMail[i].status = "Sent";
         } catch (error) {
-          console.error("❌ Failed to send email:", error);
+          console.error("Failed to send email:", error);
         }
       }
     }
