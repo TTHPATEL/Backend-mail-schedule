@@ -226,8 +226,9 @@ app.post("/api/scheduleMail", (req, res) => {
   if (!template || !schedule || !recipient || !recipientGroupName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+
   // Convert schedule to UTC before storing
-  let scheduleUTC = moment(schedule).utc().format();
+  const scheduleUTC = moment.tz(schedule, "Asia/Kolkata").utc().format();
 
   const newSchedule = {
     scheduleMailID: Date.now(),
