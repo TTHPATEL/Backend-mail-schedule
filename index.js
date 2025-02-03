@@ -309,7 +309,7 @@ app.get("/api/scheduleMail/:id", (req, res) => {
 app.put("/api/scheduleMail/:id", (req, res) => {
   const { id } = req.params;
   const { template, schedule, recipient, recipientGroupName } = req.body;
-  console.log(recipient);
+  // console.log(recipient);
   const mailIndex = scheduleMail.findIndex((mail) => mail.scheduleMailID == id);
 
   if (mailIndex === -1) {
@@ -318,7 +318,10 @@ app.put("/api/scheduleMail/:id", (req, res) => {
 
   // Update only the fields that are provided
   if (template) scheduleMail[mailIndex].template = template;
-  if (schedule) scheduleMail[mailIndex].schedule = schedule;
+  if (schedule) {
+    schedule = moment.tz(schedule, "Asia/Kolkata").utc().format();
+    scheduleMail[mailIndex].schedule = schedule;
+  }
   if (recipient) scheduleMail[mailIndex].recipient = recipient;
   if (recipientGroupName)
     scheduleMail[mailIndex].recipientGroupName = recipientGroupName;
