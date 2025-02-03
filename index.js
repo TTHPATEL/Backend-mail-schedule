@@ -3,7 +3,6 @@ import cors from "cors";
 import nodemailer from "nodemailer";
 import cron from "node-cron";
 import moment from "moment-timezone";
-const SERVER_TIMEZONE = "Asia/Kolkata"; // Change this to match your server's timezone
 
 const app = express();
 app.use(express.json());
@@ -98,26 +97,29 @@ This email was sent on ${scheduleDate}.
 You're invited to our upcoming company event! <br>
 We look forward to seeing you there. Don't miss out!
 <br><br>
-This email was sent on ${scheduleDate}.`;
+This email was sent on ${scheduleDate}.
+`;
           break;
         case "Salary Increment Letter":
           htmlContent = `<b>Dear Patron,</b><br>
 We are pleased to inform you that your salary has been incremented. Congratulations on your continued contributions to the company!
 <br><br>
-This email was sent on ${scheduleDate}.`;
+This email was sent on ${scheduleDate}.
+`;
           break;
         case "Termination Letter":
           htmlContent = `<b>Dear Patron,</b><br>
 We regret to inform you that your employment with the company has been terminated, effective immediately. We wish you the best in your future endeavors.
 <br><br>
-This email was sent on ${scheduleDate}.`;
+This email was sent on ${scheduleDate}.
+`;
           break;
         case "Employee Promotion Notice":
           htmlContent = `<b>Dear Patron,</b><br>
 Congratulations! We are pleased to inform you that you have been promoted to [new position]. Your hard work and dedication have been truly appreciated.
 <br><br>
 This email was sent on ${scheduleDate}.
-;`;
+`;
           break;
         default:
           htmlContent = "<b>Dear user, your letter is being processed.</b>";
@@ -154,7 +156,7 @@ cron.schedule("* * * * *", async () => {
   console.log("⏳ Checking for scheduled emails...");
 
   const now = moment().utc(); // Current time in UTC
-  console.log(" 🖥️ Server Time (UTC):", now.format());
+  console.log("Server Time (UTC):", now.format());
 
   for (let i = 0; i < scheduleMail.length; i++) {
     let { schedule, recipient, template, scheduleMailID, status } =
@@ -163,23 +165,23 @@ cron.schedule("* * * * *", async () => {
     // Convert stored schedule time to UTC for comparison
     let scheduleDate = moment(schedule).utc();
 
-    console.log(`
-      ⏰ ScheduleMail count : ${
+    console.log(
+      `ScheduleMail Count: ${
         scheduleMail.length
-      } AND Schedule Time (UTC):  ${scheduleDate.format()}
-   `);
+      } | Scheduled Time (UTC): ${scheduleDate.format()}`
+    );
 
     if (status === "Pending" && scheduleDate.isSameOrBefore(now)) {
-      console.log(`
-        🚀 Sending scheduled email: ${template} at ${scheduleDate.format()}
-      `);
+      console.log(
+        `🚀 Sending scheduled email: ${template} at ${scheduleDate.format()}`
+      );
 
       for (let email of recipient) {
         try {
           await sendEmail(email, scheduleDate.format(), template);
           scheduleMail[i].status = "Sent";
         } catch (error) {
-          console.error("Failed to send email:", error);
+          console.error("❌ Failed to send email:", error);
         }
       }
     }
@@ -219,27 +221,28 @@ app.get("/api/userlist", (req, res) => {
 
 //  Route 6: Add New Scheduled Mail
 app.post("/api/scheduleMail", (req, res) => {
-  const { template, schedule, recipient, recipientGroupName } = req.body;
+  let { template, schedule, recipient, recipientGroupName } = req.body;
+
   if (!template || !schedule || !recipient || !recipientGroupName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+
   // Convert schedule to UTC before storing
   let scheduleUTC = moment(schedule).utc().format();
 
   const newSchedule = {
     scheduleMailID: Date.now(),
     template,
-    schedule: scheduleUTC,
+    schedule: scheduleUTC, // Store as UTC
     recipient,
     recipientGroupName,
     status: "Pending",
   };
 
   scheduleMail.push(newSchedule);
-
   res
     .status(201)
-    .json({ message: "Email sent and scheduled successfully", newSchedule });
+    .json({ message: "Email scheduled successfully", newSchedule });
 });
 
 //  Route 10: Add New User
