@@ -55,7 +55,7 @@ const categorylist = [
 // Schedule Mail List
 let scheduleMail = [
   {
-    scheduleMailID: 3,
+    scheduleMailID: 1,
     template: "Salary Increment Letter",
     schedule: "2026-02-02T04:14",
     recipientGroupName: "Marketing Team",
