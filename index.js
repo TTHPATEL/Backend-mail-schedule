@@ -5,12 +5,13 @@ import cron from "node-cron";
 
 const app = express();
 app.use(express.json());
-app.use(
-  cors({
-    origin: ["http://localhost:3000", "http://localhost:3000/"],
-    methods: "GET, POST",
-  })
-); // Allow frontend
+app.use(cors()); // Allow frontend
+// app.use(
+//   cors({
+//     origin: ["http://localhost:3000", "http://localhost:3000/"],
+//     methods: "GET, POST",
+//   })
+// ); // Allow frontend
 
 // User List
 const userlist = [
@@ -52,16 +53,17 @@ const categorylist = [
 ];
 
 // Schedule Mail List
-// let scheduleMail = [
-//   {
-//     scheduleMailID: 1,
-//     template: "Salary Increment Letter",
-//     schedule: "2025-02-02T04:14",
-//     recipient: ["thchhabhaiya@gmail.com"],
-//     status: "Pending",
-//   },
-// ];
-let scheduleMail = [];
+let scheduleMail = [
+  {
+    scheduleMailID: 3,
+    template: "Salary Increment Letter",
+    schedule: "2026-02-02T04:14",
+    recipientGroupName: "Marketing Team",
+    recipient: ["thchhabhaiya@gmail.com"],
+    status: "Pending",
+  },
+];
+// let scheduleMail = [];
 
 // Template List
 const template_List = [
@@ -209,8 +211,8 @@ app.get("/api/userlist", (req, res) => {
 
 //  Route 6: Add New Scheduled Mail
 app.post("/api/scheduleMail", (req, res) => {
-  const { template, schedule, recipient } = req.body;
-  if (!template || !schedule || !recipient) {
+  const { template, schedule, recipient, recipientGroupName } = req.body;
+  if (!template || !schedule || !recipient || !recipientGroupName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -219,6 +221,7 @@ app.post("/api/scheduleMail", (req, res) => {
     template,
     schedule,
     recipient,
+    recipientGroupName,
     status: "Pending",
   };
 
@@ -241,6 +244,44 @@ app.post("/delete/scheduleMail", (req, res) => {
   } else {
     res.status(404).json({ error: "Scheduled mail not found." });
   }
+});
+
+//  Route 8:  get a specific scheduled mail by ID
+
+app.get("/api/scheduleMail/:id", (req, res) => {
+  const { id } = req.params;
+  const scheduledMail = scheduleMail.find((mail) => mail.scheduleMailID == id);
+
+  if (!scheduledMail) {
+    return res.status(404).json({ error: "Scheduled mail not found" });
+  }
+
+  res.json(scheduledMail);
+});
+
+//  Route 9: To update scheduled mail
+
+app.put("/api/scheduleMail/:id", (req, res) => {
+  const { id } = req.params;
+  const { template, schedule, recipient, recipientGroupName } = req.body;
+  console.log(recipient);
+  const mailIndex = scheduleMail.findIndex((mail) => mail.scheduleMailID == id);
+
+  if (mailIndex === -1) {
+    return res.status(404).json({ error: "Scheduled mail not found" });
+  }
+
+  // Update only the fields that are provided
+  if (template) scheduleMail[mailIndex].template = template;
+  if (schedule) scheduleMail[mailIndex].schedule = schedule;
+  if (recipient) scheduleMail[mailIndex].recipient = recipient;
+  if (recipientGroupName)
+    scheduleMail[mailIndex].recipientGroupName = recipientGroupName;
+
+  res.status(200).json({
+    message: "Scheduled mail updated successfully",
+    updatedMail: scheduleMail[mailIndex],
+  });
 });
 
 //  Start Server
