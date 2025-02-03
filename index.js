@@ -226,11 +226,42 @@ app.post("/api/scheduleMail", (req, res) => {
   };
 
   scheduleMail.push(newSchedule);
+
   res
     .status(201)
     .json({ message: "Email sent and scheduled successfully", newSchedule });
 });
 
+//  Route 10: Add New User
+app.post("/api/userlist", (req, res) => {
+  const { name, email, IDofcategoryList } = req.body;
+  if (!name || !email || !IDofcategoryList) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const newUser = {
+    id: Date.now(),
+    name,
+    email,
+    IDofcategoryList,
+  };
+
+  userlist.push(newUser);
+  res.status(201).json({ message: "New user add successfully", newUser });
+});
+
+//  Route 11: Delete User
+app.post("/delete/user", (req, res) => {
+  const { id } = req.body;
+  const index = userlist.findIndex((item) => item.id === id);
+
+  if (index !== -1) {
+    userlist.splice(index, 1);
+    res.status(200).json({ message: "User deleted successfully." });
+  } else {
+    res.status(404).json({ error: "User not found." });
+  }
+});
 //  Route 7: Delete Scheduled Mail
 app.post("/delete/scheduleMail", (req, res) => {
   const { scheduleMailID } = req.body;
