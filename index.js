@@ -3,6 +3,7 @@ import cors from "cors";
 import nodemailer from "nodemailer";
 import cron from "node-cron";
 import moment from "moment-timezone";
+const SERVER_TIMEZONE = "Asia/Kolkata"; // Change this to match your server's timezone
 
 const app = express();
 app.use(express.json());
@@ -156,7 +157,7 @@ cron.schedule("* * * * *", async () => {
   console.log("⏳ Checking for scheduled emails...");
 
   const now = moment().utc(); // Current time in UTC
-  console.log("Server Time (UTC):", now.format());
+  console.log(" 🖥️ Server Time (UTC):", now.format());
 
   for (let i = 0; i < scheduleMail.length; i++) {
     let { schedule, recipient, template, scheduleMailID, status } =
@@ -166,9 +167,9 @@ cron.schedule("* * * * *", async () => {
     let scheduleDate = moment(schedule).utc();
 
     console.log(
-      `ScheduleMail Count: ${
+      `⏰ ScheduleMail count : ${
         scheduleMail.length
-      } | Scheduled Time (UTC): ${scheduleDate.format()}`
+      } AND Schedule Time (UTC):  ${scheduleDate.format()}`
     );
 
     if (status === "Pending" && scheduleDate.isSameOrBefore(now)) {
@@ -181,7 +182,7 @@ cron.schedule("* * * * *", async () => {
           await sendEmail(email, scheduleDate.format(), template);
           scheduleMail[i].status = "Sent";
         } catch (error) {
-          console.error("❌ Failed to send email:", error);
+          console.error("Failed to send email:", error);
         }
       }
     }
@@ -221,28 +222,27 @@ app.get("/api/userlist", (req, res) => {
 
 //  Route 6: Add New Scheduled Mail
 app.post("/api/scheduleMail", (req, res) => {
-  let { template, schedule, recipient, recipientGroupName } = req.body;
-
+  const { template, schedule, recipient, recipientGroupName } = req.body;
   if (!template || !schedule || !recipient || !recipientGroupName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-
   // Convert schedule to UTC before storing
   let scheduleUTC = moment(schedule).utc().format();
 
   const newSchedule = {
     scheduleMailID: Date.now(),
     template,
-    schedule: scheduleUTC, // Store as UTC
+    schedule: scheduleUTC,
     recipient,
     recipientGroupName,
     status: "Pending",
   };
 
   scheduleMail.push(newSchedule);
+
   res
     .status(201)
-    .json({ message: "Email scheduled successfully", newSchedule });
+    .json({ message: "Email sent and scheduled successfully", newSchedule });
 });
 
 //  Route 10: Add New User
