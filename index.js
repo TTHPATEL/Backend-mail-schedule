@@ -59,7 +59,7 @@ let scheduleMail = [
   {
     scheduleMailID: 1,
     template: "Salary Increment Letter",
-    schedule: "2027-02-14T13:25:00Z",
+    schedule: "2026-02-02T04:14",
     recipientGroupName: "Marketing Team",
     recipient: ["thchhabhaiya@gmail.com"],
     status: "Pending",
