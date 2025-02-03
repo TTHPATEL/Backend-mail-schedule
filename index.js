@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import nodemailer from "nodemailer";
 import cron from "node-cron";
+import moment from "moment-timezone";
+const SERVER_TIMEZONE = "Asia/Kolkata"; // Change this to match your server's timezone
 
 const app = express();
 app.use(express.json());
@@ -154,24 +156,33 @@ This email was sent on ${scheduleDate}.
 cron.schedule("* * * * *", async () => {
   console.log("⏳ Checking for scheduled emails...");
 
-  const now = new Date();
+  const now = moment().utc(); // Current time in UTC
+  console.log(" 🖥️ Server Time (UTC):", now.format());
 
   for (let i = 0; i < scheduleMail.length; i++) {
-    const { schedule, recipient, template, scheduleMailID, status } =
+    let { schedule, recipient, template, scheduleMailID, status } =
       scheduleMail[i];
-    const scheduleDate = new Date(schedule);
+
+    // Convert stored schedule time to UTC for comparison
+    let scheduleDate = moment(schedule).utc();
 
     console.log(
-      ` scheduleMail : ${scheduleMail.length} AND scheduleDate :  ${scheduleDate}`
+      `⏰ ScheduleMail count : ${
+        scheduleMail.length
+      } AND Schedule Time (UTC):  ${scheduleDate.format()}`
     );
 
-    if (status === "Pending" && scheduleDate <= new Date()) {
-      console.log(` Sending scheduled email: ${template} at ${schedule}`);
+    if (status === "Pending" && scheduleDate.isSameOrBefore(now)) {
+      console.log(
+        `🚀 Sending scheduled email: ${template} at ${scheduleDate.format()}`
+      );
 
       for (let email of recipient) {
-        const sent = await sendEmail(email, schedule, template);
-        if (sent) {
+        try {
+          await sendEmail(email, scheduleDate.format(), template);
           scheduleMail[i].status = "Sent";
+        } catch (error) {
+          console.error("Failed to send email:", error);
         }
       }
     }
@@ -215,11 +226,13 @@ app.post("/api/scheduleMail", (req, res) => {
   if (!template || !schedule || !recipient || !recipientGroupName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+  // Convert schedule to UTC before storing
+  let scheduleUTC = moment(schedule).utc().format();
 
   const newSchedule = {
     scheduleMailID: Date.now(),
     template,
-    schedule,
+    schedule: scheduleUTC,
     recipient,
     recipientGroupName,
     status: "Pending",
