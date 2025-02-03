@@ -154,20 +154,23 @@ This email was sent on ${scheduleDate}.
 cron.schedule("* * * * *", async () => {
   console.log("⏳ Checking for scheduled emails...");
 
-  const now = new Date();
+  const nowUTC = new Date();
 
   for (let i = 0; i < scheduleMail.length; i++) {
     const { schedule, recipient, template, scheduleMailID, status } =
       scheduleMail[i];
     const scheduleDate = new Date(schedule);
-    console.log("Server Time:", new Date().toISOString());
+    // Convert UTC to IST for logging
+    const scheduleIST = new Date(schedule).toLocaleString("en-US", {
+      timeZone: "Asia/Kolkata",
+    });
 
     console.log(
       ` scheduleMail : ${scheduleMail.length} AND scheduleDate :  ${scheduleDate}`
     );
 
-    if (status === "Pending" && scheduleDate <= new Date()) {
-      console.log(` Sending scheduled email: ${template} at ${schedule}`);
+    if (status === "Pending" && scheduleDate <= nowUTC) {
+      console.log(`📧  Sending scheduled email: ${template} at ${schedule}`);
 
       for (let email of recipient) {
         const sent = await sendEmail(email, schedule, template);
