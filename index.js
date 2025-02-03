@@ -166,7 +166,7 @@ cron.schedule("* * * * *", async () => {
     });
 
     console.log(
-      ` scheduleMail : ${scheduleMail.length} AND scheduleDate :  ${scheduleDate}`
+      ` scheduleMail : ${scheduleMail.length} AND scheduleDate :  ${scheduleDate} AND nowUTC ${nowUTC}`
     );
 
     if (status === "Pending" && scheduleDate <= nowUTC) {
