@@ -160,6 +160,7 @@ cron.schedule("* * * * *", async () => {
     const { schedule, recipient, template, scheduleMailID, status } =
       scheduleMail[i];
     const scheduleDate = new Date(schedule);
+    console.log("Server Time:", new Date().toISOString());
 
     console.log(
       ` scheduleMail : ${scheduleMail.length} AND scheduleDate :  ${scheduleDate}`
