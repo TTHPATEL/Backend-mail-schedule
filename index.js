@@ -330,6 +330,7 @@ app.put("/api/scheduleMail/:id", (req, res) => {
   }
 
   if (recipient) scheduleMail[mailIndex].recipient = recipient;
+  scheduleMail[mailIndex].schedule = schedule;
   if (recipientGroupName)
     scheduleMail[mailIndex].recipientGroupName = recipientGroupName;
 
