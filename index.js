@@ -322,6 +322,9 @@ app.put("/api/scheduleMail/:id", (req, res) => {
   if (template) scheduleMail[mailIndex].template = template;
 
   if (schedule) {
+    // Store the original IST time
+    scheduleMail[mailIndex].scheduleinIST = schedule;
+
     const formattedSchedule = moment
       .tz(schedule, "Asia/Kolkata")
       .utc()
@@ -330,7 +333,6 @@ app.put("/api/scheduleMail/:id", (req, res) => {
   }
 
   if (recipient) scheduleMail[mailIndex].recipient = recipient;
-  scheduleMail[mailIndex].schedule = schedule;
   if (recipientGroupName)
     scheduleMail[mailIndex].recipientGroupName = recipientGroupName;
 
