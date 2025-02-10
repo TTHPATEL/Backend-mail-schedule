@@ -342,6 +342,77 @@ app.put("/api/scheduleMail/:id", (req, res) => {
   });
 });
 
+//  Route 10:  get a specific User by ID
+
+app.get("/api/user/:id", (req, res) => {
+  const { id } = req.params;
+  const user = userlist.find((user) => user.id == id);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  res.json(user);
+});
+
+app.put("/api/scheduleMail/:id", (req, res) => {
+  const { id } = req.params;
+  const { template, schedule, recipient, recipientGroupName } = req.body;
+
+  const mailIndex = scheduleMail.findIndex((mail) => mail.scheduleMailID == id);
+
+  if (mailIndex === -1) {
+    return res.status(404).json({ error: "Scheduled mail not found" });
+  }
+
+  // Update only the fields that are provided
+  if (template) scheduleMail[mailIndex].template = template;
+
+  if (schedule) {
+    // Store the original IST time
+    scheduleMail[mailIndex].scheduleinIST = schedule;
+
+    const formattedSchedule = moment
+      .tz(schedule, "Asia/Kolkata")
+      .utc()
+      .format(); // Convert to UTC
+    scheduleMail[mailIndex].schedule = formattedSchedule;
+  }
+
+  if (recipient) scheduleMail[mailIndex].recipient = recipient;
+  if (recipientGroupName)
+    scheduleMail[mailIndex].recipientGroupName = recipientGroupName;
+
+  res.status(200).json({
+    message: "Scheduled mail updated successfully",
+    updatedMail: scheduleMail[mailIndex],
+  });
+});
+
+//  Route 11:  Update a specific User by ID
+
+app.put("/api/user/:id", (req, res) => {
+  const { id } = req.params;
+  const { name, emailid, recipientGroupNameID } = req.body;
+
+  const userIndex = userlist.findIndex((i) => i.id == id);
+
+  if (userIndex === -1) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  // Update only the fields that are provided
+  if (name) userlist[userIndex].name = name;
+  if (emailid) userlist[userIndex].email = emailid;
+  if (recipientGroupNameID)
+    userlist[userIndex].IDofcategoryList = recipientGroupNameID;
+
+  res.status(200).json({
+    message: "User updated successfully",
+    updatedUser: userlist[userIndex],
+  });
+});
+
 //  Start Server
 const PORT = 3013;
 app.listen(PORT, () => {
