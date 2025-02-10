@@ -47,7 +47,7 @@ const userlist = [
 
 // Category List
 const categorylist = [
-  { categoryID: 1, categoryName: "New Joinees" },
+  { categoryID: 1, categoryName: "New Joinee" },
   { categoryID: 2, categoryName: "HR Department" },
   { categoryID: 3, categoryName: "Marketing Team" },
   { categoryID: 4, categoryName: "Interns & Trainees" },
