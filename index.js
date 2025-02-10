@@ -221,7 +221,75 @@ app.get("/api/userlist", (req, res) => {
 //     .catch((error) => res.status(500).send(error.message));
 // });
 
-//  Route 6: Add New Scheduled Mail
+//  Route 6: ADD New User
+app.post("/api/userlist", (req, res) => {
+  const { name, email, IDofcategoryList } = req.body;
+  if (!name || !email || !IDofcategoryList) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const newUser = {
+    id: Date.now(),
+    name,
+    email,
+    IDofcategoryList,
+  };
+
+  userlist.push(newUser);
+  res.status(201).json({ message: "New user add successfully", newUser });
+});
+
+//  Route 7:  GET a specific User by ID
+
+app.get("/api/user/:id", (req, res) => {
+  const { id } = req.params;
+  const user = userlist.find((user) => user.id == id);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  res.json(user);
+});
+
+//  Route 8:  UPDATE a specific User by ID
+
+app.put("/api/user/:id", (req, res) => {
+  const { id } = req.params;
+  const { name, emailid, recipientGroupNameID } = req.body;
+
+  const userIndex = userlist.findIndex((i) => i.id == id);
+
+  if (userIndex === -1) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  // Update only the fields that are provided
+  if (name) userlist[userIndex].name = name;
+  if (emailid) userlist[userIndex].email = emailid;
+  if (recipientGroupNameID)
+    userlist[userIndex].IDofcategoryList = recipientGroupNameID;
+
+  res.status(200).json({
+    message: "User updated successfully",
+    updatedUser: userlist[userIndex],
+  });
+});
+
+//  Route 9: DELETE User
+app.post("/delete/user", (req, res) => {
+  const { id } = req.body;
+  const index = userlist.findIndex((item) => item.id === id);
+
+  if (index !== -1) {
+    userlist.splice(index, 1);
+    res.status(200).json({ message: "User deleted successfully." });
+  } else {
+    res.status(404).json({ error: "User not found." });
+  }
+});
+
+//  Route 10: ADD New Scheduled Mail
 app.post("/api/scheduleMail", (req, res) => {
   const { template, schedule, recipient, recipientGroupName } = req.body;
   if (!template || !schedule || !recipient || !recipientGroupName) {
@@ -248,37 +316,56 @@ app.post("/api/scheduleMail", (req, res) => {
     .json({ message: "Email sent and scheduled successfully", newSchedule });
 });
 
-//  Route 10: Add New User
-app.post("/api/userlist", (req, res) => {
-  const { name, email, IDofcategoryList } = req.body;
-  if (!name || !email || !IDofcategoryList) {
-    return res.status(400).json({ error: "Missing required fields" });
+//  Route 11:  GET a specific scheduled mail by ID
+
+app.get("/api/scheduleMail/:id", (req, res) => {
+  const { id } = req.params;
+  const scheduledMail = scheduleMail.find((mail) => mail.scheduleMailID == id);
+
+  if (!scheduledMail) {
+    return res.status(404).json({ error: "Scheduled mail not found" });
   }
 
-  const newUser = {
-    id: Date.now(),
-    name,
-    email,
-    IDofcategoryList,
-  };
-
-  userlist.push(newUser);
-  res.status(201).json({ message: "New user add successfully", newUser });
+  res.json(scheduledMail);
 });
 
-//  Route 11: Delete User
-app.post("/delete/user", (req, res) => {
-  const { id } = req.body;
-  const index = userlist.findIndex((item) => item.id === id);
+//  Route 12: UPDATE scheduled mail
 
-  if (index !== -1) {
-    userlist.splice(index, 1);
-    res.status(200).json({ message: "User deleted successfully." });
-  } else {
-    res.status(404).json({ error: "User not found." });
+app.put("/api/scheduleMail/:id", (req, res) => {
+  const { id } = req.params;
+  const { template, schedule, recipient, recipientGroupName } = req.body;
+
+  const mailIndex = scheduleMail.findIndex((mail) => mail.scheduleMailID == id);
+
+  if (mailIndex === -1) {
+    return res.status(404).json({ error: "Scheduled mail not found" });
   }
+
+  // Update only the fields that are provided
+  if (template) scheduleMail[mailIndex].template = template;
+
+  if (schedule) {
+    // Store the original IST time
+    scheduleMail[mailIndex].scheduleinIST = schedule;
+
+    const formattedSchedule = moment
+      .tz(schedule, "Asia/Kolkata")
+      .utc()
+      .format(); // Convert to UTC
+    scheduleMail[mailIndex].schedule = formattedSchedule;
+  }
+
+  if (recipient) scheduleMail[mailIndex].recipient = recipient;
+  if (recipientGroupName)
+    scheduleMail[mailIndex].recipientGroupName = recipientGroupName;
+
+  res.status(200).json({
+    message: "Scheduled mail updated successfully",
+    updatedMail: scheduleMail[mailIndex],
+  });
 });
-//  Route 7: Delete Scheduled Mail
+
+//  Route 13: DELETE Scheduled Mail
 app.post("/delete/scheduleMail", (req, res) => {
   const { scheduleMailID } = req.body;
   const index = scheduleMail.findIndex(
@@ -293,124 +380,55 @@ app.post("/delete/scheduleMail", (req, res) => {
   }
 });
 
-//  Route 8:  get a specific scheduled mail by ID
+//  Route 14:  GET a specific template by ID
 
-app.get("/api/scheduleMail/:id", (req, res) => {
+app.get("/api/template/:id", (req, res) => {
   const { id } = req.params;
-  const scheduledMail = scheduleMail.find((mail) => mail.scheduleMailID == id);
+  const Particular_template_List = template_List.find(
+    (i) => i.template_id == id
+  );
 
-  if (!scheduledMail) {
-    return res.status(404).json({ error: "Scheduled mail not found" });
+  if (!Particular_template_List) {
+    return res.status(404).json({ error: "Template not found" });
   }
 
-  res.json(scheduledMail);
+  res.json(Particular_template_List);
 });
 
-//  Route 9: To update scheduled mail
+//  Route 15: UPDATE template
 
-app.put("/api/scheduleMail/:id", (req, res) => {
+app.put("/api/template/:id", (req, res) => {
   const { id } = req.params;
-  const { template, schedule, recipient, recipientGroupName } = req.body;
+  const { template_name } = req.body;
 
-  const mailIndex = scheduleMail.findIndex((mail) => mail.scheduleMailID == id);
+  const templateIndex = template_List.findIndex((i) => i.template_id == id);
 
-  if (mailIndex === -1) {
-    return res.status(404).json({ error: "Scheduled mail not found" });
+  if (templateIndex === -1) {
+    return res.status(404).json({ error: "Template not found" });
   }
 
   // Update only the fields that are provided
-  if (template) scheduleMail[mailIndex].template = template;
-
-  if (schedule) {
-    // Store the original IST time
-    scheduleMail[mailIndex].scheduleinIST = schedule;
-
-    const formattedSchedule = moment
-      .tz(schedule, "Asia/Kolkata")
-      .utc()
-      .format(); // Convert to UTC
-    scheduleMail[mailIndex].schedule = formattedSchedule;
-  }
-
-  if (recipient) scheduleMail[mailIndex].recipient = recipient;
-  if (recipientGroupName)
-    scheduleMail[mailIndex].recipientGroupName = recipientGroupName;
+  if (template_name) template_List[templateIndex].template_name = template_name;
 
   res.status(200).json({
-    message: "Scheduled mail updated successfully",
-    updatedMail: scheduleMail[mailIndex],
+    message: "Template updated successfully",
+    updatedTemplate: template_List[templateIndex],
   });
 });
 
-//  Route 10:  get a specific User by ID
+//  Route 16: DELETE Template
+app.post("/delete/template", (req, res) => {
+  const { template_id } = req.body;
+  const index = template_List.findIndex(
+    (item) => item.template_id === template_id
+  );
 
-app.get("/api/user/:id", (req, res) => {
-  const { id } = req.params;
-  const user = userlist.find((user) => user.id == id);
-
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
+  if (index !== -1) {
+    template_List.splice(index, 1);
+    res.status(200).json({ message: "Template deleted successfully." });
+  } else {
+    res.status(404).json({ error: "Template mail not found." });
   }
-
-  res.json(user);
-});
-
-app.put("/api/scheduleMail/:id", (req, res) => {
-  const { id } = req.params;
-  const { template, schedule, recipient, recipientGroupName } = req.body;
-
-  const mailIndex = scheduleMail.findIndex((mail) => mail.scheduleMailID == id);
-
-  if (mailIndex === -1) {
-    return res.status(404).json({ error: "Scheduled mail not found" });
-  }
-
-  // Update only the fields that are provided
-  if (template) scheduleMail[mailIndex].template = template;
-
-  if (schedule) {
-    // Store the original IST time
-    scheduleMail[mailIndex].scheduleinIST = schedule;
-
-    const formattedSchedule = moment
-      .tz(schedule, "Asia/Kolkata")
-      .utc()
-      .format(); // Convert to UTC
-    scheduleMail[mailIndex].schedule = formattedSchedule;
-  }
-
-  if (recipient) scheduleMail[mailIndex].recipient = recipient;
-  if (recipientGroupName)
-    scheduleMail[mailIndex].recipientGroupName = recipientGroupName;
-
-  res.status(200).json({
-    message: "Scheduled mail updated successfully",
-    updatedMail: scheduleMail[mailIndex],
-  });
-});
-
-//  Route 11:  Update a specific User by ID
-
-app.put("/api/user/:id", (req, res) => {
-  const { id } = req.params;
-  const { name, emailid, recipientGroupNameID } = req.body;
-
-  const userIndex = userlist.findIndex((i) => i.id == id);
-
-  if (userIndex === -1) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  // Update only the fields that are provided
-  if (name) userlist[userIndex].name = name;
-  if (emailid) userlist[userIndex].email = emailid;
-  if (recipientGroupNameID)
-    userlist[userIndex].IDofcategoryList = recipientGroupNameID;
-
-  res.status(200).json({
-    message: "User updated successfully",
-    updatedUser: userlist[userIndex],
-  });
 });
 
 //  Start Server
